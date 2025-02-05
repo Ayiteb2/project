@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VoIP Call</title>
+    <script src="ttps://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
+</head>
+<body>
+    <h1>VoIP Call with Agora</h1>
+    <button onclick="startCall()">Start Call</button>
+    <button onclick="endCall()">End Call</button>
+
+    <script>
+        const APP_ID = "16835d7841a04dffb7e1309b82cfbe48";
+        const TOKEN = "007eJxTYFiyYV6Jafpazci6a/o5LNMexoteTl+2c/X0r5s4+ALtJG4oMBiaWRibpphbmBgmGpikpKUlmacaGhtYJlkYJaclpZpYRJ1ZlN4QyMgQyCDMyMgAgSA+C0NJanEJAwMAE60eLg==";
+        const CHANNEL = "test";
+
+        const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+
+        function startCall() {
+			client.init(APP_ID, () => {
+				client.join(TOKEN, CHANNEL, null, (uid) => {
+					console.log("Joined channel:", CHANNEL);
+					
+					// Create local audio track
+					navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+						const audioTrack = client.createStream({
+							streamID: uid,
+							audio: true,
+							video: false
+						});
+							audioTrack.init(() => {
+								client.publish(audioTrack, (err) => {
+									console.error("Publish failed:", err);
+								});
+							});
+						});	
+					});		
+				});
+			}	
+							
+
+
+        function endCall() {
+            client.leave(() => {
+                console.log("Left the call");
+				
+				// Stop all local audio tracks
+				client.localStreams.forEach((stream) => {
+				stream.stop();
+					stream.close();
+				});
+			});	
+		}		
+    </script>
+</body>
+</html>
