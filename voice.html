@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>VoIP Call</title>
-    <script src="https://cdn.agora.io/sdk/release/AgoraRTC_N.js"></script>
+    <script src="ttps://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
 </head>
 <body>
     <h1>VoIP Call with Agora</h1>
@@ -17,18 +17,40 @@
         const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
 
         function startCall() {
-            client.init(APP_ID, () => {
-                client.join(TOKEN, CHANNEL, null, (uid) => {
-                    console.log("Joined channel:", CHANNEL);
-                });
-            });
-        }
+			client.init(APP_ID, () => {
+				client.join(TOKEN, CHANNEL, null, (uid) => {
+					console.log("Joined channel:", CHANNEL);
+					
+					// Create local audio track
+					navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+						const audioTrack = client.createStream({
+							streamID: uid,
+							audio: true,
+							video: false
+						});
+							audioTrack.init(() => {
+								client.publish(audioTrack, (err) => {
+									console.error("Publish failed:", err);
+								});
+							});
+						});	
+					});		
+				});
+			}	
+							
+
 
         function endCall() {
             client.leave(() => {
                 console.log("Left the call");
-            });
-        }
+				
+				// Stop all local audio tracks
+				client.localStreams.forEach((stream) => {
+				stream.stop();
+					stream.close();
+				});
+			});	
+		}		
     </script>
 </body>
 </html>
